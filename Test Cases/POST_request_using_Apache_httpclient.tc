@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<TestCaseEntity>
+   <description></description>
+   <name>POST_request_using_Apache_httpclient</name>
+   <tag></tag>
+   <comment></comment>
+   <testCaseGuid>d54281b9-a70f-4fa6-a062-e8fea1220d34</testCaseGuid>
+</TestCaseEntity>
