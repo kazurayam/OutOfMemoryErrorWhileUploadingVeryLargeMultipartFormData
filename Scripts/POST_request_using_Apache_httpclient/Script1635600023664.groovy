@@ -11,25 +11,33 @@ import org.apache.http.client.methods.RequestBuilder;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.mime.HttpMultipartMode;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
-import org.apache.http.entity.mime.content.StringBody;
+import org.apache.http.entity.mime.content.FileBody;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
+import java.nio.file.Path
+import java.nio.file.Paths
+import java.nio.file.Files
 
+Path userHome = Paths.get(System.getProperty("user.home"))
+Path downloads = userHome.resolve("Downloads")
+Path ks820dmg = downloads.resolve("Katalon.Studio-8.2.0beta.dmg") // 521mb
+Path ks810dmg = downloads.resolve("Katalon Studio-8.1.0.dmg")     // 495mb
+Path idea = downloads.resolve("ideaIC-2021.2.3.dmg") // 810mb
+assert Files.exists(ks820dmg)
+assert Files.exists(ks810dmg)
+assert Files.exists(idea)
 
-CloseableHttpClient httpclient = HttpClients.createDefault()
-
-File file = new File("./server.groovy")
-StringBody part_in_us_ascii = new StringBody("hello,world", new ContentType("text/plain", StandardCharsets.UTF_8))
-StringBody part_in_germany = new StringBody("Grüß Gott!", new ContentType("text/plain", StandardCharsets.UTF_8))
-StringBody part_in_japanese = new StringBody("こんにちは", new ContentType("text/plain", StandardCharsets.UTF_8))
+FileBody part_ks820dmg = new FileBody(ks820dmg.toFile(), ContentType.DEFAULT_BINARY)
+FileBody part_ks810dmg = new FileBody(ks810dmg.toFile(), ContentType.DEFAULT_BINARY)
+FileBody part_idea = new FileBody(idea.toFile(), ContentType.DEFAULT_BINARY)
 
 // build multipart upload request
 HttpEntity data = MultipartEntityBuilder.create()
 	.setMode(HttpMultipartMode.BROWSER_COMPATIBLE)
-	.addPart("part-in-us-ascii", part_in_us_ascii)
-	.addPart("part-in-germany", part_in_germany)
-	.addPart("part-in-japanese", part_in_japanese)
+	.addPart("part-ks820dmb", part_ks820dmg)
+	.addPart("part-ks810dmg", part_ks810dmg)
+	.addPart("part-idea", part_idea)
 	.build()
 
 // build http request and assign multipart upload data
@@ -41,13 +49,21 @@ HttpUriRequest request = RequestBuilder
 println("Executing request ${request.getRequestLine()}")
 
 // Create a custom response handler
-ResponseHandler<String> responseHandler = new MyResponseHander()
+ResponseHandler responseHandler = new MyResponseHander()
 
+CloseableHttpClient httpclient = HttpClients.createDefault()
 String responseBody = httpclient.execute(request, responseHandler)
-System.out.println("----------------------------------------")
+
+System.out.println("------------ response body ------------")
 System.out.println(responseBody)
 
-class MyResponseHander implements ResponseHandler<String> {
+
+/**
+ * 
+ * @author kazuakiurayama
+ */
+class MyResponseHander implements ResponseHandler {
+	
 	public String handleResponse(final HttpResponse response) throws IOException {
 		int status = response.getStatusLine().getStatusCode();
 		if (status >= 200 && status < 300) {

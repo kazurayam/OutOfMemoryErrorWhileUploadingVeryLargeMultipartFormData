@@ -1,5 +1,6 @@
 // original : https://github.com/opengl-8080/groovy-http-server
 import java.net.InetSocketAddress
+import com.sun.net.httpserver.Headers
 import com.sun.net.httpserver.HttpExchange
 import com.sun.net.httpserver.HttpHandler
 import com.sun.net.httpserver.HttpServer
@@ -16,7 +17,7 @@ cli.with {
     p longOpt: 'port', args: 1, argName: 'port', 'port number. default : 80.'
     b longOpt: 'base-dir', args: 1, argName: 'path', 'base directory path. default : current directory.'
     h longOpt: 'help', 'show this help.'
-    _ longOpt: 'print-request', 'display request infomation.'
+    _ longOpt: 'print-request', 'display request information.'
     _ longOpt: 'debug', 'run with debug mode.'
 }
 
@@ -54,7 +55,8 @@ class Handler implements HttpHandler {
     @Override
     void handle(HttpExchange exchange) {
         try {
-            this.printRequestInfo(exchange)
+        	this.printRequestHeaders(exchange)
+            // this.printRequestBody(exchange)
             def uri = exchange.requestURI.toString()
             def decodedUri = URLDecoder.decode(uri, URL_ENCODING)
             this.debugLog {"uri=${uri}, decodedUri=${decodedUri}"}
@@ -78,8 +80,14 @@ class Handler implements HttpHandler {
             this.response(exchange, 500, '<html><h1>Internal Server Error</h1></html>')
         }
     }
+    
+    private void printRequestHeaders(exchange) {
+    	println "------------ request headers ------------"
+    	Headers headers = exchange.getRequestHeaders()
+    	println headers
+    }
 
-    private void printRequestInfo(exchange) {
+    private void printRequestBody(exchange) {
             String requestBody = new BufferedReader(
                     new InputStreamReader(exchange.getRequestBody(),
                                           StandardCharsets.UTF_8))
@@ -119,11 +127,15 @@ body = ${requestBody}
 
     private void response(exchange, sc, message) {
         exchange.sendResponseHeaders(sc, 0)
-        exchange.responseBody.withWriter(RESPONSE_ENCODING) {it.write(message)}
+        exchange.responseBody.withWriter(RESPONSE_ENCODING) {
+        	it.write(message)
+        }
     }
 
     private void debugLog(message) {
-        if (this.debug) println message()
+        if (this.debug) {
+        	println message()
+        }
     }
 
     private void setContentType(exchange, file) {
